@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
 import com.example.listycity.ui.theme.ListyCityTheme
+import androidx.compose.material3.Icon
 
 
 class MainActivity : ComponentActivity() {
@@ -26,6 +27,7 @@ class MainActivity : ComponentActivity() {
                         onUpdateCity = { oldCity, updatedCity ->
                             cityRepository.updateCity(oldCity, updatedCity)
                         },
+                        onDeleteCity = { cityRepository.deleteCity(it) },
                         modifier = Modifier.padding(innerPadding)
                     )
                 }

@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -22,16 +23,20 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.listycity.ui.theme.ListyCityTheme
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.Scaffold
 
 @Composable
 fun CityListScreen(
     cities: List<City>,
     onAddCity: (City) -> Unit,
     onUpdateCity: (City, City) -> Unit,
+    onDeleteCity: (City) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var newCityName by remember { mutableStateOf("") }
@@ -41,146 +46,180 @@ fun CityListScreen(
     var editedCityName by remember { mutableStateOf("") }
     var editedProvinceName by remember { mutableStateOf("") }
 
-    Column(modifier = modifier.fillMaxSize()) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.End
-        ) {
-            FloatingActionButton(
-                modifier = Modifier.padding(16.dp),
-                onClick = {
-                    showAddCityFields = !showAddCityFields
-                    if (showAddCityFields) {
-                        selectedCity = null
-                        editedCityName = ""
-                        editedProvinceName = ""
-                    }
-                }
-            ) {
-                Text("+")
-            }
-        }
-        if (showAddCityFields) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-            ) {
-                OutlinedTextField(
-                    value = newCityName,
-                    onValueChange = { newCityName = it },
-                    label = { Text("City") },
-                    modifier = Modifier.weight(1f)
-                )
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                OutlinedTextField(
-                    value = newProvinceName,
-                    onValueChange = { newProvinceName = it },
-                    label = { Text("Province") },
-                    modifier = Modifier.weight(1f)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-
-                Button(
-                    modifier = Modifier.padding(vertical = 12.dp),
-                    onClick = {
-                        if (newCityName.isNotBlank() && newProvinceName.isNotBlank()) {
-                            onAddCity(
-                                City(
-                                    name = newCityName,
-                                    province = newProvinceName
-                                )
-                            )
-
-                            newCityName = ""
-                            newProvinceName = ""
-                            showAddCityFields = false
-                        }
-                    }
-                ) {
-                    Text("ADD CITY")
-                }
-            }
-        }
+    Scaffold(modifier = modifier, contentWindowInsets = WindowInsets(0), floatingActionButton = {
         if (selectedCity != null) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
+            /*
+                Adapted from "Create a floating action button (FAB)" (Android Developers, Jetpack Compose Quick Guides)
+                https://developer.android.com/develop/ui/compose/quick-guides/content/create-floating-action-button
+                Changes: removed the icon, set a pink containerColor and white contentColor, and wired onClick to delete the selected city
+             */
+            ExtendedFloatingActionButton(onClick = {
+                selectedCity?.let {
+                    onDeleteCity(it)
+                    selectedCity = null
+                    editedCityName = ""
+                    editedProvinceName = ""
+                }
+            },
+                containerColor = Color(0xFFFF69B4),
+                contentColor = Color.White
             ) {
-                OutlinedTextField(
-                    value = editedCityName,
-                    onValueChange = { editedCityName = it },
-                    label = { Text("Updated City") },
-                    modifier = Modifier.weight(1f)
-                )
+                Text("DELETE CITY")
+            }
+        }
 
-                Spacer(modifier = Modifier.width(8.dp))
-
-                OutlinedTextField(
-                    value = editedProvinceName,
-                    onValueChange = { editedProvinceName = it },
-                    label = { Text("Updated Province") },
-                    modifier = Modifier.weight(1f)
-                )
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                Button(
-                    modifier = Modifier.padding(vertical = 12.dp),
+    }) { innerPadding ->
+        Column(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                FloatingActionButton(
+                    modifier = Modifier.padding(16.dp),
                     onClick = {
-                        val cityToUpdate = selectedCity
-                        if (
-                            cityToUpdate != null &&
-                            editedCityName.isNotBlank() &&
-                            editedProvinceName.isNotBlank()
-                        ) {
-                            onUpdateCity(
-                                cityToUpdate,
-                                City(
-                                    name = editedCityName,
-                                    province = editedProvinceName
-                                )
-                            )
-
+                        showAddCityFields = !showAddCityFields
+                        if (showAddCityFields) {
                             selectedCity = null
                             editedCityName = ""
                             editedProvinceName = ""
                         }
                     }
                 ) {
-                    Text("UPDATE CITY")
+                    Text("+")
                 }
             }
-        }
-        LazyColumn(modifier = Modifier.fillMaxSize()) {
-            itemsIndexed(cities) { index, city ->
-                CityRow(
-                    city = city,
-                    onClick = {
-                        showAddCityFields = false
-                        newCityName = ""
-                        newProvinceName = ""
-                        selectedCity = city
-                        editedCityName = city.name
-                        editedProvinceName = city.province
+            if (showAddCityFields) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+                    OutlinedTextField(
+                        value = newCityName,
+                        onValueChange = { newCityName = it },
+                        label = { Text("City") },
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    OutlinedTextField(
+                        value = newProvinceName,
+                        onValueChange = { newProvinceName = it },
+                        label = { Text("Province") },
+                        modifier = Modifier.weight(1f)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Button(
+                        modifier = Modifier.padding(vertical = 12.dp),
+                        onClick = {
+                            if (newCityName.isNotBlank() && newProvinceName.isNotBlank()) {
+                                onAddCity(
+                                    City(
+                                        name = newCityName,
+                                        province = newProvinceName
+                                    )
+                                )
+
+                                newCityName = ""
+                                newProvinceName = ""
+                                showAddCityFields = false
+                            }
+                        }
+                    ) {
+                        Text("ADD CITY")
                     }
-                )
-                if (index < cities.lastIndex) {
-                    HorizontalDivider()
+                }
+            }
+            if (selectedCity != null) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+                    OutlinedTextField(
+                        value = editedCityName,
+                        onValueChange = { editedCityName = it },
+                        label = { Text("Updated City") },
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    OutlinedTextField(
+                        value = editedProvinceName,
+                        onValueChange = { editedProvinceName = it },
+                        label = { Text("Updated Province") },
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Button(
+                        modifier = Modifier.padding(vertical = 12.dp),
+                        onClick = {
+                            val cityToUpdate = selectedCity
+                            if (
+                                cityToUpdate != null &&
+                                editedCityName.isNotBlank() &&
+                                editedProvinceName.isNotBlank()
+                            ) {
+                                onUpdateCity(
+                                    cityToUpdate,
+                                    City(
+                                        name = editedCityName,
+                                        province = editedProvinceName
+                                    )
+                                )
+
+                                selectedCity = null
+                                editedCityName = ""
+                                editedProvinceName = ""
+                            }
+                        }
+                    ) {
+                        Text("UPDATE CITY")
+                    }
+                }
+            }
+            LazyColumn(modifier = Modifier.fillMaxSize()) {
+                itemsIndexed(cities) { index, city ->
+                    CityRow(
+                        city = city,
+                        onClick = {
+                            showAddCityFields = false
+                            newCityName = ""
+                            newProvinceName = ""
+                            selectedCity = city
+                            editedCityName = city.name
+                            editedProvinceName = city.province
+                        },
+                        onDelete = {
+                            onDeleteCity(city)
+                            if (selectedCity == city) {
+                                selectedCity = null
+                            }
+                        }
+                    )
+                    if (index < cities.lastIndex) {
+                        HorizontalDivider()
+                    }
                 }
             }
         }
     }
+
+
+
 }
 
 
 @Composable
 fun CityRow(
     city: City,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onDelete: () -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -213,7 +252,8 @@ fun CityListScreenPreview() {
                 City("Calgary", "AB")
             ),
             onAddCity = {},
-            onUpdateCity = { _, _ -> }
+            onUpdateCity = { _, _ -> },
+            onDeleteCity = {}
         )
     }
 }
